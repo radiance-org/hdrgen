@@ -14,51 +14,18 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 
+# ExternalProject_Add(panlib SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/panlib)
 add_subdirectory(external/panlib)
-
-add_subdirectory(external/radiance/src/common)
-
-add_subdirectory(external/openexr)
-
-set(tiff-tools OFF)
-set(tiff-tests OFF)
-set(tiff-docs OFF)
-set(tiff-contrib OFF)
-add_subdirectory(external/libtiff/)
-
-ExternalProject_Add(libjpeg
-SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/libjpeg-turbo
-CMAKE_ARGS
-	-DENABLE_STATIC=TRUE
-	-DENABLE_SHARED=FALSE
-        -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
-)
-
-# Include directories
-# include_directories(
-#     ${CMAKE_SOURCE_DIR}/src
-# )
 
 # Define executables
 add_executable(hdrgen src/hdrgenmain.cpp)
 add_executable(hdrcvt src/hdrcvtmain.cpp)
-# add_executable(expose2range src/expose2range.c)
-# add_executable(warpimage src/warpimage.c)
 
 # Link libraries
-target_link_libraries(hdrgen
-        PRIVATE
-            panlib
-            rtrad
-            IlmImf
-            Imath
-            Half
-            Iex
-            IlmThread
-	    jpeg-static
-	    tiff
-            # ZLIB::ZLIB
-)
+target_link_libraries(hdrgen PRIVATE pan)
+target_link_libraries(hdrcvt PRIVATE pan)
+# target_include_directories(hdrgen PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/external/panlib/src)
+# target_include_directories(hdrcvt PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/external/panlib/src)
 
 # Installation
 install(TARGETS hdrgen hdrcvt

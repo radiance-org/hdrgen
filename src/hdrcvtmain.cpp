@@ -114,7 +114,7 @@ TMapObject::Init(const PanImage &pim, const ImgColorSpace *dcsp)
 	}
 	if (tmSetSpace(tms, (pim.GetCS()->format == IPFrgb) ?
 			(RGBPRIMP)pim.GetCS()->chroma : TM_XYZPRIM,
-				stonits, NULL) != TM_E_OK) {
+				stonits) != TM_E_OK) {
 		Init();
 		return false;
 	}
