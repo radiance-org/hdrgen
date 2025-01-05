@@ -1,3 +1,0 @@
-[submodule "external/panlib"]
-	path = external/panlib
-	url = https://github.com/radiance-org/panlib
