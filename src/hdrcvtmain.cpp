@@ -9,6 +9,17 @@
  *
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+char progname[1024];  // Make it a sufficiently large array
+
+#ifdef __cplusplus
+}
+#endif
+
+
 #include <stdio.h>
 #include <fcntl.h>
 #include <stdlib.h>
@@ -20,13 +31,14 @@
 #include "system.h"
 #include "dmessage.h"
 #include "panimage.h"
+#include "radheader.h"
 
 const char	USE_MSG[] = "Usage: %s [-verbose][-dim X Y | -scale F]\
 [-quality Q][-expose E][-calibrate M | -limit %%][-flare]\
 [-wb F][-rotate {0|90|180|270}[hv]][-blur b][-dilate r][-comment C][-p param=val[:p2=v2..]]\
 [-match match.img | -tmo T][-input ICS][-output OCS][-swap] input.img output.img\n";
 
-char *		progname;		// global argv[0]
+/*char *		progname = NULL;		// global argv[0]*/
 
 // Compute and remove lens flare from a high dynamic range image
 extern bool	PHDremoveFlare(ImgStruct *ims,
@@ -1101,7 +1113,8 @@ main(int argc, char * argv[])
 	ImgColorSpace	inpCS, outCS;
 	float		blur = 0;
 						// Initialize Pancine i/o
-	progname = argv[0];
+	/*progname = argv[0];*/
+  strcpy(progname, argv[0]);
 	PloadStandardReaders();
 	PaddIReaderI(&IRInterfaceDPT);
 	PaddIReaderI(&IRInterfaceMTX);
@@ -1387,7 +1400,7 @@ main(int argc, char * argv[])
 						// reorient image?
 	if (orient > 0 || (!orient && inpImg.GetInfo(IIForientation) &&
 				(orient = inpImg.GetInfo()->orientation) > 1)) {
-		extern const short	RHortab[];
+		/*extern const short	RHortab[8];*/
 		if (!inpImg.Reorient(orient)) {
 			DMESG(DMCparameter, "Image orientation failure");
 			return 1;
