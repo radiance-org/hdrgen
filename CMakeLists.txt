@@ -9,28 +9,26 @@ cmake_policy(SET CMP0079 NEW)
 cmake_policy(SET CMP0077 NEW)
 
 # Build type
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Release)
-endif()
+set(CMAKE_BUILD_TYPE Release)
 
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 # ExternalProject_Add(panlib SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/panlib)
 add_subdirectory(external/panlib)
 
-# Define executables
-add_executable(hdrgen src/hdrgenmain.cpp)
-add_executable(hdrcvt src/hdrcvtmain.cpp)
-
 set(PANLIB_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/panlib/src)
 set(RAD_COMMON_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/panlib/external/radiance/src/common)
+
+add_executable(hdrgen src/hdrgenmain.cpp)
 target_include_directories(hdrgen PRIVATE ${PANLIB_SOURCE_DIR} ${RAD_COMMON_DIR})
-target_include_directories(hdrcvt PRIVATE ${PANLIB_SOURCE_DIR} ${RAD_COMMON_DIR})
-
-# Link libraries
 target_link_libraries(hdrgen PRIVATE pan)
-target_link_libraries(hdrcvt PRIVATE pan)
+install(TARGETS hdrgen
+    RUNTIME DESTINATION bin
+)
 
-# Installation
-install(TARGETS hdrgen hdrcvt
+add_executable(hdrcvt src/hdrcvtmain.cpp)
+target_include_directories(hdrcvt PRIVATE ${PANLIB_SOURCE_DIR} ${RAD_COMMON_DIR})
+target_link_libraries(hdrcvt PRIVATE pan)
+install(TARGETS hdrcvt
     RUNTIME DESTINATION bin
 )
