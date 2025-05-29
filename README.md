@@ -1,29 +1,30 @@
 # hdrgen
 Although this repository builds only a few tools, the panlib library that underpins
-it is extensive.  Overall, the focus is on high dynamic-range (HDR) image manipulation,
-but many operations support 16-bit/channel and 8-bit/channel as well.  Much of the library
-is tailored to support of the Photosphere image cataloger and HDR builder, which is not
-available at the moment, sadly.  Volunteers on getting it working again are encouraged to step up.
+these tools is extensive.  Its main focus is on high dynamic-range (HDR) image manipulation,
+but most operations support 16-bit/channel and 8-bit/channel as well.  Much of the library
+is tailored to support the Photosphere image cataloger and HDR builder app, which is not
+available for 64-bit targets and needs updating.  Volunteers on getting it working again are encouraged to step up.
 
-These are the main tools provided herein:
+These are the tools we currently build:
 
 hdrgen - takes a set of low dynamic-range (LDR) images in a common 8-bit/channel format and merges them into an HDR format
 
 hdrcvt - translates between various HDR and LDR formats and optionally performs numerous operations during conversion
 
-PQconvert - batch-converts a set of HDR images into 16-bit/channel TIFFs appropriate for input to HDR video encoders such as ffmpeg
+# PQconvert - batch-converts a set of HDR images into 16-bit/channel TIFFs appropriate for input to HDR video encoders such as ffmpeg
+#
+# expose2range - computes and prints optimal multiplier to get input HDR image pixels within the given value bounds
+#
+# warpimage - warps an HDR or LDR image according to the specified input grid vertex locations
 
-expose2range - computes and prints optimal multiplier to get input HDR image pixels within the given value bounds
-
-warpimage - warps an HDR or LDR image according to the specified input grid vertex locations
-
-bitmapop - performs a variety of comparisons and so forth between images or bitmaps to compute an output bitmap as a bilevel BMP
-
-The panlib library itself is extensive, with a mixture of C and C++ interfaces.
-Many of these routines and types depend on the Radiance library held in ray/src/common,
-which must be included with all builds as a header directory and librtrad.a linked to
-create a binary.  Most tools further depend on image i/o libraries for JPEG, TIFF,
-and OpenEXR.  (Radiance HDR and BMP are included in rtrad.a)  In general, it is wise
+# bitmapop - performs a variety of comparisons and so forth between images or bitmaps to compute an output bitmap as a bilevel BMP
+#
+The panlib library itself consists of over 30 headers and 75 program modules,
+with a mixture of C and C++ interfaces.
+Many of these routines depend on the Radiance library held in ray/src/common,
+which must be included with all builds as a header directory, and linked to librtrad.a
+to create a binary.  Most tools further depend on image i/o libraries for JPEG, TIFF,
+and OpenEXR.  (Radiance HDR and BMP are included in rtrad.a)  In general, it is best
 to link all libraries statically, as there are too many different versions floating
 about and they disagree on what features to support and the details of how to support them.
 
@@ -41,10 +42,10 @@ The PanImage class itself encapsulates much of the functionality described in th
 C API above, with more convenient reading, writing, and pixel accessors.  Simple
 operations such as adding and subtracting images and pixels are supported with
 arithmetic operator overloading for this class and the PixelVal type defined in
-the "imagio.h" header included by "panimage.h".  Note that none of the types or
-code in this library use or depend on STL.
+the "imagio.h" header included by "pimage.h", which in turn is included in
+"panimage.h".  None of the types or code in this library use or depend on STL.
 
-Some headers and their functionality they support are listed alphabetically below:
+Some headers and the functionality they support are listed alphabetically below:
 
 ablockarray.h - efficient block allocator/deallocator template for large arrays of identically-sized chunks
 
