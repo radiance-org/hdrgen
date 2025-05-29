@@ -8,10 +8,15 @@ available at the moment, sadly.  Volunteers on getting it working again are enco
 These are the main tools provided herein:
 
 hdrgen - takes a set of low dynamic-range (LDR) images in a common 8-bit/channel format and merges them into an HDR format
+
 hdrcvt - translates between various HDR and LDR formats and optionally performs numerous operations during conversion
+
 PQconvert - batch-converts a set of HDR images into 16-bit/channel TIFFs appropriate for input to HDR video encoders such as ffmpeg
+
 expose2range - computes and prints optimal multiplier to get input HDR image pixels within the given value bounds
+
 warpimage - warps an HDR or LDR image according to the specified input grid vertex locations
+
 bitmapop - performs a variety of comparisons and so forth between images or bitmaps to compute an output bitmap as a bilevel BMP
 
 The panlib library itself is extensive, with a mixture of C and C++ interfaces.
@@ -42,24 +47,43 @@ code in this library use or depend on STL.
 Some headers and their functionality they support are listed alphabetically below:
 
 ablockarray.h - efficient block allocator/deallocator template for large arrays of identically-sized chunks
+
 astack.h - block-allocated stack template
+
 cache.h - memory cache handling used throughout panlib to manage RAM footprint
+
 dbase.h - extensive database manager used by Photosphere and some other C++ code
+
 dbhlink.h - header manager used by the database routines (and others)
+
 exif.h - EXIF header i/o
+
 gaussjord.h - matrix equation solver template for square and overdetermined systems of linear equations
+
 pancine.h - inclusive header used by Photosphere routines
+
 panimage.h - described above
+
 pdispimg.h - sophisticated and confusing routines for managing image display in Photosphere
+
 pdraw.h - useful set of routines for drawing lines, circles, and polygons in bitmaps and images
+
 pfeatures.h - a feature-matching and alignment warping method
+
 phdrimg.h - API for merging LDR images into HDR, including alignment, ghost- and flare-removal
+
 photophile.h - classes and APIs specifically tailored to Photosphere
+
 ppano.h - class for joining panoramas
+
 pstrings.h - generally useful routines and classes for char * strings and groups of sorted strings
+
 pthumb.h - Photosphere thumbnail creator and memory/disk cache manager
+
 textform.h - text drawing base class
+
 textmap.h - text class for drawing into bitmaps
+
 tiffin.h - basic TIFF metadata input class
 
 If you have specific questions about the library or its use, please write to Greg Ward at
