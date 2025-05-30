@@ -9,8 +9,6 @@
  *
  */
 
-
-
 #include <stdio.h>
 #include <fcntl.h>
 #include <stdlib.h>
@@ -29,15 +27,7 @@ const char	USE_MSG[] = "Usage: %s [-verbose][-dim X Y | -scale F]\
 [-wb F][-rotate {0|90|180|270}[hv]][-blur b][-dilate r][-comment C][-p param=val[:p2=v2..]]\
 [-match match.img | -tmo T][-input ICS][-output OCS][-swap] input.img output.img\n";
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-char progname[1024];
-
-#ifdef __cplusplus
-}
-#endif
+char *		progname = NULL;	// global argv[0]
 
 // Compute and remove lens flare from a high dynamic range image
 extern bool	PHDremoveFlare(ImgStruct *ims,
@@ -319,12 +309,12 @@ mapLoad(TMstruct *tms, int ndx)
 static bool
 mapGamma(TMstruct *tms, int ndx)
 {
-	static const int	maxV = (1L<<(8*sizeof(TMAP_TYP))) - 1;
-	const int		horig = HISTI(tms->hbrmin);
-	const int		hlen = HISTI(tms->hbrmax) + 1 - horig;
-	int			htot = 0;
-	int			i, cnt;
-	TMbright		lmin, lmax;
+	const int	maxV = (1L<<(8*sizeof(TMAP_TYP))) - 1;
+	const int	horig = HISTI(tms->hbrmin);
+	const int	hlen = HISTI(tms->hbrmax) + 1 - horig;
+	HIST_TYP	cnt, htot = 0;
+	int		i;
+	TMbright	lmin, lmax;
 					// get histogram total
 	for (i = hlen; i-- > 0; )
 		htot += tms->histo[i];
@@ -362,9 +352,9 @@ mapPhoto(TMstruct *tms, int ndx)
 {
 	const int	horig = HISTI(tms->hbrmin);
 	const int	hlen = HISTI(tms->hbrmax) + 1 - horig;
-	unsigned long	htot = 0;
+	HIST_TYP	cnt, htot = 0;
 	double		lavg = 0;
-	int		i, cnt;
+	int		i;
 	TMbright	lmin, lmax;
 					// get histogram total & mean
 	for (i = hlen; i-- > 0; ) {
@@ -396,7 +386,7 @@ mapPhoto(TMstruct *tms, int ndx)
 	const double	gsca = alph/tmLuminance(lavg);
 	for (i = tms->mbrmax-tms->mbrmin+1; i--; ) {
 		double	val = gsca*tmLuminance(tms->mbrmin+i);
-		val = 256.*pow(val/(1. + val), 1./tms->mongam);
+		val = TM_BRES*pow(val/(1. + val), 1./tms->mongam);
 		// tms->lumap[i] = (val >= double(0xffff)) ? 0xffff : (int)val;
 		tms->lumap[i] = (int)val;
 	}
@@ -1112,8 +1102,7 @@ main(int argc, char * argv[])
 	ImgColorSpace	inpCS, outCS;
 	float		blur = 0;
 						// Initialize Pancine i/o
-	// progname = argv[0];
-	strcpy(progname, argv[0]);
+	progname = argv[0];
 	PloadStandardReaders();
 	PaddIReaderI(&IRInterfaceDPT);
 	PaddIReaderI(&IRInterfaceMTX);
