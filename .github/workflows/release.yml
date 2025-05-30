@@ -42,6 +42,11 @@ jobs:
         else
           cp hdrgen hdrcvt expose2range PQconvert bitmapop warpimage artifacts/
         fi
+        if [ "${{ matrix.os }}" == "macos-latest" ]; then
+          sudo pkgbuild --identifier hdrgen.pkg --root "." --install-location "/usr/local/bin" hdrgen_darwin.pkg
+          sudo cp -r hdrgen_darwin.pkg artifacts/
+        fi
+
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
