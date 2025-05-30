@@ -32,3 +32,31 @@ target_link_libraries(hdrcvt PRIVATE pan)
 install(TARGETS hdrcvt
     RUNTIME DESTINATION bin
 )
+
+add_executable(PQconvert src/PQconvert.cpp src/pq2.h)
+target_include_directories(PQconvert PRIVATE ${PANLIB_SOURCE_DIR} ${RAD_COMMON_DIR})
+target_link_libraries(PQconvert PRIVATE pan)
+install(TARGETS PQconvert
+    RUNTIME DESTINATION bin
+)
+
+add_executable(expose2range src/expose2range.c)
+target_include_directories(expose2range PRIVATE ${PANLIB_SOURCE_DIR} ${RAD_COMMON_DIR})
+target_link_libraries(expose2range PRIVATE pan)
+install(TARGETS expose2range
+    RUNTIME DESTINATION bin
+)
+
+add_executable(warpimage src/warpimage.c)
+target_include_directories(warpimage PRIVATE ${PANLIB_SOURCE_DIR} ${RAD_COMMON_DIR})
+target_link_libraries(warpimage PRIVATE pan)
+install(TARGETS warpimage
+    RUNTIME DESTINATION bin
+)
+
+add_executable(bitmapop src/bitmapop.cpp)
+target_include_directories(bitmapop PRIVATE ${PANLIB_SOURCE_DIR} ${RAD_COMMON_DIR})
+target_link_libraries(bitmapop PRIVATE pan)
+install(TARGETS bitmapop
+    RUNTIME DESTINATION bin
+)
