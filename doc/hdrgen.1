@@ -1,0 +1,96 @@
+.TH "hdrgen" "1" "0.1" "Greg Ward" ""
+.SH "NAME"
+Create a high dynamic-range image from multiple exposures of a static scene.  The input files may be JPEG or TIFF, but must be 24-bit RGB (trichromatic) images.  The output  is your choice of a Radiance HDR  picture or a 32-bit LogLuv TIFF image.  The syntax of the hdrgen command is:
+.br
+
+.SH "SYNOPSIS"
+\fBhdrgen -o \fRout_file [\fB-r \fRcam.rsp] [\fB-m \fRcachesiz] [\fB-a\fR] [\fB-e\fR] [\fB-s \fRstonits1] image1 [\fB-s \fRstonits2] image2
+.br
+
+.SH "DESCRIPTION"
+As many exposures may be given as necessary, and should ideally be spaced within two f-stops of each other.  The brightest exposure should have no black pixels, and the darkest exposure should have no white pixels, but there is little point in extending beyond these limits, which may cause problems in determining the camera response function.  The order of options and input files is unimportant, with the exception of the Ðs option, which must preceed the corresponding exposure.  Following is an explanation of the options and their meanings:
+.br
+
+\fB-o \fRout_file
+.br
+       Write high dynamic-range image to the given file. If the file has a '.tif' suffix, it will be written out as a LogLuv TIFF image. If it has a '.exr' suffix, it will be written out as an ILM OpenEXR image.  If it has any other suffix or none at all, it will be written out as an RLE RGBE Radiance picture.
+.br
+
+\fB-F\fR       Toggle output file overwrite switch (defaults to “false”).
+.br
+
+\fB-k \fRvar_file
+.br
+       Write variance image to the given file, using the same format rules as the output file.  This image indicates where the input deviates from an ideal exposure sequence, and may be useful for diagnostic purposes or further image processing.
+.br
+
+\fB-q\fR quality
+.br
+       Set output quality to quality (0-100).  This affects the JPEG output compression, and potentially the details of the other formats written as well.  (For example, writing out a TIFF with –q 100 results in a 96-bit/pixel IEEE floating-point file rather than a LogLuv encoding.)
+.br
+
+\fB-r \fRcam.rsp
+.br
+       Use the given file for the \fIcamera's\fR \fIresponse\fR \fIcurves\fR. If this file exists, it must contain the coefficients of three polynomials, one for each color primary. If the file does not exist, hdrgen will use its principal algorithm to derive these coefficients and write them out to this file for later use. If a scene contains no low frequency content or gradations of intensity, it may be impossible to derive the response curve from the exposure sequence. Thus it is better to create this information once for a given camera and reuse it for other sequences.
+.br
+
+\fB-c\fR CS
+.br
+Specify the output color space, where CS is one of “sRGB” for standard CCIR709 primaries (the default), “XYZ” for CIE XYZ space, “AdobeRGB” for Adobe RGB color space, or “P3” for P3 color space.  Note that XYZ output will only be preserved in the TIF LogLuv and Radiance output formats.
+.br
+
+\fB-m \fR\fIcachesiz\fR
+.br
+       Specify the \fIcache\fR \fIsize\fR to use in megabytes. No more than this much memory will be allocated to hold image data during processing. The default value is 300. Using a smaller value may require longer processing if many input images are used, since some will need to be read in twice rather than once, but specifying a larger value than there is memory available will definitely be worse, due to virtual memory swapping.
+.br
+
+\fB-a     \fRToggle \fIautomatic\fR \fIexposure\fR \fIalignment\fR. The default value is 'on', so giving this option one time switches it off. The alignment algorithm examines neighboring exposures and finds the pixel offset in x and y that minimizes the difference in the two images.  It may be necessary to switch this option off when dealing with very dark or very bright exposures taken in a tripod-stabilized sequence.
+.br
+
+\fB-e     \fRToggle \fIexposure\fR \fIadjustment\fR. Normally 'on', exposure adjustment fine-tunes the scale difference between adjacent images to account for slight inaccuracies in the aperture or speed settings of the camera.
+.br
+
+\fB-x     \fRToggle over- and under-exposed image removal.  Normally 'off', this option causes unnecessary exposures that are too light or too dark to contribute useful information to be automatically ignored.
+.br
+
+\fB-f     \fRToggle \fIlens\fR \fIflare\fR \fIremoval\fR.  Normally 'off', this option is designed to reduce the scattered light from a camera's lens and aperture, which results in a slightly fogged appearance in high dynamic-range images.
+.br
+
+\fB-g     \fRToggle \fIghost\fR \fIremoval\fR. Normally 'off', this option attempts to identify and single out moving portions of the image, avoiding ghost-like or blurry results in the final image, at the expense of some added noise.
+.br
+
+\fB-s \fR\fIstonits\fR
+.br
+       Set the \fIsample-to-nits\fR (cd/m2) conversion factor for the following image to the floating-point value  stonits. This is normally determined automatically by the program from camera information stored in the Exif image header. If the image did not come directly from a digital camera, then it will be necessary to use this option for each image. If the absolute conversion is unknown, then simply pick a value for the brightest image, and increase it subsequently for each exposure in the sequence. One f-stop requires doubling this conversion factor, and two f-stops requires quadrupling.
+.br
+
+.SH "DIAGNOSTICS"
+The primary failure mode for this algorithm is the one mentioned in the description of the -r option, when the exposures contain too little information to solve for the camera response function. The best solution to this problem is to take off the exposures that are very light and very dark, or to use a different sequence of images to generate a response file. This file may then be used to combine the entire set of images, since the program no longer needs to solve for the responses.
+.br
+
+Most of the other diagnostics you will encounter are 'warnings', which means that the final image will be written, but may have problems. In particular, when the alignment algorithm fails on a hand-held sequence, some ghosting may be visible on high contrast edges in the output. Using the -a option to turn off automatic alignment will eliminate the warning, but unless the sequence was taken on a very stable tripod, the results will usually be worse rather than better.
+.br
+
+.SH "EXAMPLE"
+To combine all JPEG images matching a given wildcard and put into a LogLuv TIFF:
+.br
+
+hdrgen P13351?.JPG -o testimg.tif
+.br
+
+.SH "AUTHOR"
+This software was written by Greg Ward of Exponent Corporation. Send comments or questions to <gward at exponent dot com> or <gward at lmi dot net>.
+.br
+
+.SH "REFERENCES"
+Tomoo Mitsunaga and Shree Nayar, 'Radiometric Self-Calibration', Proceedings of IEEE Conference on Computer Vision and Pattern Recognition, June, 1999.
+.br
+
+Greg Ward, 'LogLuv encoding for full-gamut, high-dynamic range images', Journal of Graphics Tools, 3(1):15-31 1998.
+.br
+
+Greg Ward, High Dynamic Range Images, web page.
+.br
+
+Paul Debevec, web page
+.br
