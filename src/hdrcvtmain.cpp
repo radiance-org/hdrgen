@@ -27,19 +27,11 @@ const char	USE_MSG[] = "Usage: %s [-verbose][-dim X Y | -scale F]\
 [-wb F][-rotate {0|90|180|270}[hv]][-blur b][-dilate r][-comment C][-p param=val[:p2=v2..]]\
 [-match match.img | -tmo T][-input ICS][-output OCS][-swap] input.img output.img\n";
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-char progname[1024];
-
-#ifdef __cplusplus
-}
-#endif
-
 // Compute and remove lens flare from a high dynamic range image
 extern bool	PHDremoveFlare(ImgStruct *ims,
 				int (*pbar)(const char *, int) = NULL);
+
+extern char* progname;
 
 #define MIN_GAMMA	1.6f		// minimum expected gamma
 #define DEF_GAMMA	(ICS_sRGB.gamma)
@@ -320,7 +312,8 @@ mapGamma(TMstruct *tms, int ndx)
 	const int	maxV = (1L<<(8*sizeof(TMAP_TYP))) - 1;
 	const int	horig = HISTI(tms->hbrmin);
 	const int	hlen = HISTI(tms->hbrmax) + 1 - horig;
-	HIST_TYP	cnt, htot = 0;
+	HIST_TYP	htot = 0;
+	long		cnt;
 	int		i;
 	TMbright	lmin, lmax;
 					// get histogram total
@@ -360,7 +353,8 @@ mapPhoto(TMstruct *tms, int ndx)
 {
 	const int	horig = HISTI(tms->hbrmin);
 	const int	hlen = HISTI(tms->hbrmax) + 1 - horig;
-	HIST_TYP	cnt, htot = 0;
+	HIST_TYP	htot = 0;
+	long		cnt;
 	double		lavg = 0;
 	int		i;
 	TMbright	lmin, lmax;
@@ -1109,8 +1103,9 @@ main(int argc, char * argv[])
 	char *		paramp = outParams;
 	ImgColorSpace	inpCS, outCS;
 	float		blur = 0;
+						// set progname
+	fixargv0(argv[0]);
 						// Initialize Pancine i/o
-	strcpy(progname, argv[0]);
 	PloadStandardReaders();
 	PaddIReaderI(&IRInterfaceDPT);
 	PaddIReaderI(&IRInterfaceMTX);
@@ -1445,7 +1440,7 @@ main(int argc, char * argv[])
 		int	when2expos = (0.999f <= expos) & (expos <= 1.001f) ? 0 :
 					(ImgDataSize[inpCS.dtype] >
 					    ImgDataSize[outCS.dtype]) ? -1 : 1;
-		int	when2match = (match_histo == NULL) ? 0 :
+		int	when2match = !match_histo ? 0 :
 				(inpCS.dtype == IDTfloat ||
 				 PmatchColorSpace(matchImg.GetCS(), &inpCS,
 							PICMptype)) ? -1 : 1;

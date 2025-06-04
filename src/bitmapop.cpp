@@ -2,7 +2,6 @@
  * Load and operate on same-sized 2-D bitmaps
  */
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -18,16 +17,6 @@ enum CompareOp {coNone, coLT, coGT, coLE, coGE, coEQ, coNE};
 CompareOp	revcomp[] = {coNone, coGE, coLE, coGT, coLT, coEQ, coNE};
 
 float		epsilon = 0;	// comparison epsilon in normalized units
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-char progname[1024];
-
-#ifdef __cplusplus
-}
-#endif
 
 // Print usage message and exit with bad status
 void
@@ -306,8 +295,7 @@ main(int argc, char *argv[])
 	ABitMap2	curMap;
 	int		a;
 
-	// progname = argv[0];
-	strcpy(progname, argv[0]);
+	fixargv0(argv[0]);				// sets progname
 	dmessage_class_flags[DMCwarning] |= DMFstderr;
 							// supported inputs
 	PaddIReaderI(&IRInterfaceBMP);
