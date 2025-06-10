@@ -1,0 +1,361 @@
+.\" RCSid "$Id$"
+.TH HDRCVT 1 6/9/2025 PANCINE
+.SH NAME
+hdrcvt - convert between HDR and LDR formats with optional transformation
+.SH SYNOPSIS
+.B hdrcvt
+[
+.B "-verbose
+][
+.B "\-output CS"
+][
+.B "\-quality Q"
+][
+.B "\-tmo alg"
+][
+.B "options"
+]
+.B input.img
+.B output.img
+.SH DESCRIPTION
+.I Hdrcvt
+reads a single input image and produces a single output file, which
+will be overwritten if it exists.
+Input and output format are determined by file suffixes, which may be taken from
+the following list:
+.sp .5
+.nf
+	tif,tiff	- Tagged Image File Format, LDR or HDR
+	jpg,jpeg	- JPEG format, LDR or HDR
+	hdr,hsr	- Radiance RGBE, XYZE, or spectral format
+	exr		- ILM OpenEXR format (HDR)
+	mtx		- Radiance float matrix format
+	dpt		- Radiance 16-bit depth map
+	bmp		- Windows BMP format (input only)
+	raw		- RAW data format (see below)
+.fi
+.PP
+The TIFF, JPEG, OpenEXR, and BMP formats are well-known standards with
+easy-to-find library support.
+.PP
+The Radiance matrix format contains uncompressed float, double,
+or ASCII data with a human-readable metadata
+header with parameters for the number of components,
+primaries, calibration, byte ordering and image dimensions.
+(See
+.I getinfo(1)
+regarding Radiance information headers.)\0
+.PP
+The Radiance depth map format is an uncompressed 16-bit/pixel
+encoding of depth values used by some rendering tools and post-processors.
+It's header is also readable using
+.I getinfo.
+.PP
+The RAW format is uncompressed data with an unknown header,
+whose size and format must be specified on input.
+Specifically, the RAW data type and color space are given with a
+.I \-input
+option, which takes the same argument(s) as the
+.I \-output
+format, described below.
+(This should not be confused with Camera RAW, which includes any number of
+proprietary formats defined by individual camera manufacturers, with
+custom data compression and encoding.)\0
+A
+.I \-swap
+option says input (and/or output) byte order is reversed in the RAW file.
+Color data must be interleaved in standard image ordering, i.e., "RGBRGBRGB...,"
+starting from the upper-left of the image and proceding to the upper-right
+before continuing on the next scanline from the left.
+.PP
+Most of the listed formats may be read or written, with the exception of
+the Windows BMP format, which is read-only due to its limited metadata
+support.
+And while the HSR (hyper-spectral radiance) format is supported on
+input, a crude conversion to RGB is performed during load
+and the spectral data is lost, so it is not supported on output.
+.PP
+The default output color space will be float in CCIR709 (RGB) primaries,
+regardless of the input type.
+If one wishes the input color space be reproduced on output, specify
+.I "\-output in"
+on the command line.
+Otherwise, there are a few standard options provided, and the output
+specification may be mixed by separating parts with a plus ('+')
+symbol or using multiple
+.I "\-output"
+settings.
+As with many
+.I hdrcvt
+options, shorter forms are accepted, thus
+.I "-o in"
+is the same as
+.I "-output input",
+but beware of name collisions.
+.PP
+Below is a list of
+.I \-output
+options:
+.sp .5
+.nf
+	sRGB           - Standard 24-bit/pixel RGB
+	AdobeRGB       - Adobe 1998 RGB primaries
+	P3             - P3 gamut RGB primaries
+	XYZ            - CIE XYZ primaries
+	gray           - grayscale (Y)
+	float          - floating-point (HDR)
+	short          - unsigned short (16-bit)
+	byte           - unsigned byte (8-bit)
+	gamma=VAL      - set output gamma value
+	linear         - synonym for "gamma=1"
+	R=x,y          - set red chromaticity
+	G=x,y          - set green chromaticity
+	B=x,y          - set blue chromaticity
+	W=x,y          - set white chromaticity
+.fi
+.PP
+Note that setting a type (float, short, or byte), a gamma value,
+and either "gray" or R, G, B, and W chromaticities gives the caller
+full control of the output color space.
+For instance, the shorthand
+.I "\-o sRGB"
+is equivalent to:
+.sp .5
+.nf
+	-output byte+gamma=2.2+R=.64,.33+G=.3,.6+B=.15,.06+W=.3127,.329
+.fi
+.PP
+When applying a tone-mapping operation to an HDR input,
+the sRGB color space is the default output type.
+The following tone-mappings are supported by the
+.I \-tmo
+option:
+.sp .5
+.nf
+	histogram        - global histogram adjustment     
+	photographic     - global photographic TMO         
+	gamma            - global gamma curve              
+	map              - global curve from stdin         
+	bilateral        - bilateral filter TMO            
+	multiscale       - multiscale local TMO            
+.fi
+.PP
+The local bilateral and multiscale TMO may be combined with
+global base operators,
+e.g, "bilateral+histogram" or "photo+multis".
+The modifier "human" may be applied as well, e.g. "human+histo".
+Like the other options, these may be abbreviated by their
+unique starting letters, such as "mu+hi" for "multiscale+histogram".
+.PP
+Note that the
+.I "\-tmo map"
+specification is not an operator, but expects to read a global
+input-to-output mapping on the standard input.
+This is given as an ordered set of input and output value pairs.
+The input is absolute luminance, and the output is proportional
+to the final pixel brightness, such as the map obtained via the
+.I pcond(1)
+.I \-x
+option.
+.PP
+If an HDR to LDR conversion is requested via the
+.I \-output
+option without a
+.I \-tmo
+selection, then a straight linear operator is applied.
+This may be adjusted using any of the exposure settings, such as the
+.I \-expose,
+.I \-calibrate,
+and
+.I \-limit
+options, described with the other image transformations
+after the next section.
+.PP
+The output image type is controlled by the
+.I \-output
+setting and the selected file format.
+This may be adjusted in some cases by the
+.I \-quality
+setting, which defaults to 90 out of 100, where higher is lower
+compression and better quality.
+The following data types are supported by each format:
+.sp .5
+.nf
+	TIFF	- any type, RGB or grayscale, -q 100 is uncompressed
+	JPEG	- LDR or HDR color or grayscale
+	HDR	- HDR color, -q 100 is uncompressed
+	EXR	- HDR color or grayscale, -q 100 is uncompressed
+	MTX	- float color or grayscale, always uncompressed
+	DPT	- grayscale, positive values only
+	RAW	- any type, uncompressed without a header
+.fi
+.PP
+The
+.I \-verbose
+option will provide details on input and output along with
+other operations performed in between.
+.PP
+Additional image transforms are applied as
+requested using the following options:
+.TP 10n
+.BI \-expose \ E
+Alter image exposure by the factor
+.I E.
+If preceded by a plus ('+') or minus ('-') sign, this is
+taken as an exposure value, which means two to the specified power.
+.TP
+.BI \-calibrate \ L
+Adjust output levels such that a value of 1.0 corresponds to
+the given luminance in candelas/meter^2.
+Any
+.I \-expose
+setting will be applied on top of the computed factor.
+If the input calibration is unknown, as in LDR or HDR
+formats that do not specify a sample-to-nits or exposure value,
+the given
+.I L
+argument will be set as the luminance corresponding to 1.0
+or its equivalent (e.g., 255 for a byte encoding).
+.TP
+.BI \-limit \ P
+Adjust the default exposure to allow the given percentage of
+pixels to exceed the 0-1 output range.
+(E.g., a
+.I P
+setting of 0 will ensure the brightest pixel is 1.0 in the output.)
+This option is incompatible with and overrides any previous
+.I \-calibrate
+setting.
+As with the
+.I \-calibrate
+option, the
+.I \-expose
+setting is applied after this initial adjustment.
+.TP
+.BI \-scale \ SF
+Scale image size by the decimal factor
+.I SF.
+A non-unity scale factor greater than 0.62 will employ
+bicubic sampling, which includes image magnification.
+Anything less than 0.62 will apply Gaussian downsampling,
+which may involve some degree of resolution loss.
+The output dimensions
+will always be adjusted to produce "square" pixels, even
+if the input pixels are not, so the same scale factor
+may not be applied to both dimensions in such cases.
+The default scale factor is 1.0, which means no resampling
+for pixels that are already square.
+Alternatively, the options below may be used to
+control the final image dimensions.
+.TP
+.BI \-dim " xdim ydim"
+Fit the output image into a frame that is at most
+.I xres
+by
+.I yres
+pixels.
+The largest scale factor is selected such
+that neither of these dimensions is exceeded, while maintaining
+square pixels.
+.TP
+.BI \-xres \ xdim
+Adjust the scale factor such that the output X-dimension does
+not exceed
+.I xdim.
+The X-dimension will exactly equal
+.I xdim
+if no other dimensioning option is specified.
+.TP
+.BI \-yres \ ydim
+Similar to the above option, but for the Y-dimension.
+Specifying both
+.I \-xres
+and
+.I \-yres
+options is the same as giving these dimensions in a single
+.I \-dim
+option.
+.TP
+.BI \-rotate \ {0|90|180|270}[hv]
+Rotate the image clockwise by the given number of degrees
+(multiples of 90, only).
+A 0 argument is usually but not always the same as no rotation,
+as it will reorient images that have non-standard starting ordering.
+If followed by an 'h' or 'v' character, the rotation will be
+followed by a horizontal or vertical flip.
+.TP
+.BI \-blur \ R
+Blur the image by the given decimal radius in output pixels.
+.TP
+.BI \-dilate \ R
+Dilate the image using the given decimal radius, which
+spreads maximum values in each channel.
+A negative radius applies an erosion operator, which may also be
+specified by the next option.
+Dilation and erosion are applied prior to any blurring operation.
+.TP
+.BI \-erode \ R
+Erode the image using the given decimal radius, which
+spreads minimum values in each channel.
+A negative radius applies a dilation operator, which may also be
+specified using the previous option.
+Erosion and dilation are applied prior to any blurring operation.
+.TP
+.BR \-flare
+Remove flare from an HDR (or 16-bit) input image.
+This is the same as applying the
+.I \-f
+option in
+.I hdrgen(1).
+The algorithm attempts to determine the point spread function
+corresponding the the captured image flare and remove it without
+otherwise affecting the image.
+The result should be improved contrast over the whole image, and
+better clarity near light sources.
+.TP
+.BI \-match \ ref.img
+Attempt to match the output image histogram to that of the specified
+reference image.
+.TP
+.BI \-comment \ COMMENT
+Add the given comment to the output file.
+If the comment contains spaces or special characters, it must be quoted
+on the command line.
+Multiple comments may be given with multiple options.
+.TP
+.BI \-parameter \ param
+A parameter is similar to a comment, but takes the form "variable=value",
+and any number of parameters may be given either in separate 
+options or using a colon (':') separator, e.g., "var1=val1:var2=val2".
+Some parameters will affect the output, such as the "REFDEPTH" for
+setting the reference depth in a Radiance DPT output file.
+.SH EXAMPLES
+To convert and tone-map and HDR image using the histogram operator,
+writing as a TIFF image using P3 color primaries:
+.IP "" .2i
+hdrcvt -tmo histo -out P3 input.hdr output.tif
+.PP
+To convert HDR to LDR, but using a linear operator
+that produces an sRGB JPEG with 2% over-exposed pixels:
+.IP "" .2i
+hdrcvt -limit 2 -out sRGB input.hdr output.jpg
+.PP
+To rotate an image by 90 degrees then flip horizontally and blur,
+writing at a quality/compression setting of 70:
+.IP "" .2i
+hdrcvt -rotate 90h -blur 1.5 -qual 70 input.jpg output.jpg
+.PP
+To downsample a square LDR image to raw gray short values:
+.IP "" .2i
+hdrcvt -output short+gray -dim 128 128 input.bmp grayshort128x128.raw
+.PP
+To take the resulting RAW image back to an equivalent TIFF file:
+.IP "" .2i
+hdrcvt -input short+gray -dim 128 128 -out in grayshort128x128.raw check.tif
+.PP
+As described earlier, the input type and size must be specified for RAW files.
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+bitmapop(1), expose2range(1), getinfo(1), hdrgen(1),
+pcomb(1), pcond(1), PQconvert(1), rcomb(1), rmtxop(1), warpimage(1)
