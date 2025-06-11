@@ -35,16 +35,16 @@ the following list:
 	raw		- RAW data format (see below)
 .fi
 .PP
-The TIFF, JPEG, OpenEXR, and BMP formats are well-known standards with
-easy-to-find library support.
+The TIFF, JPEG, OpenEXR, and BMP formats are well-known standards,
+most with easy-to-find library support.
 .PP
 The Radiance matrix format contains uncompressed float, double,
 or ASCII data with a human-readable metadata
-header with parameters for the number of components,
+header containing parameters for the number of components,
 primaries, calibration, byte ordering and image dimensions.
-(See
+(Use
 .I getinfo(1)
-regarding Radiance information headers.)\0
+to read Radiance information headers.)\0
 .PP
 The Radiance depth map format is an uncompressed 16-bit/pixel
 encoding of depth values used by some rendering tools and post-processors.
@@ -75,27 +75,16 @@ And while the HSR (hyper-spectral radiance) format is supported on
 input, a crude conversion to RGB is performed during load
 and the spectral data is lost, so it is not supported on output.
 .PP
-The default output color space will be float in CCIR709 (RGB) primaries,
+The default output color space will be float CCIR709 (RGB) primaries,
 regardless of the input type.
-If one wishes the input color space be reproduced on output, specify
-.I "\-output in"
+If the output color space should match the input, specify
+.I "\-out in"
 on the command line.
-Otherwise, there are a few standard options provided, and the output
+Otherwise, there are a few standard options listed below, and the output
 specification may be mixed by separating parts with a plus ('+')
 symbol or using multiple
 .I "\-output"
 settings.
-As with many
-.I hdrcvt
-options, shorter forms are accepted, thus
-.I "-o in"
-is the same as
-.I "-output input",
-but beware of name collisions.
-.PP
-Below is a list of
-.I \-output
-options:
 .sp .5
 .nf
 	sRGB           - Standard 24-bit/pixel RGB
@@ -144,7 +133,7 @@ The local bilateral and multiscale TMO may be combined with
 global base operators,
 e.g, "bilateral+histogram" or "photo+multis".
 The modifier "human" may be applied as well, e.g. "human+histo".
-Like the other options, these may be abbreviated by their
+Like the other options and arguments, these may be abbreviated by their
 unique starting letters, such as "mu+hi" for "multiscale+histogram".
 .PP
 Note that the
@@ -169,7 +158,7 @@ This may be adjusted using any of the exposure settings, such as the
 and
 .I \-limit
 options, described with the other image transformations
-after the next section.
+following the next section.
 .PP
 The output image type is controlled by the
 .I \-output
@@ -202,33 +191,33 @@ requested using the following options:
 Alter image exposure by the factor
 .I E.
 If preceded by a plus ('+') or minus ('-') sign, this is
-taken as an exposure value, which means two to the specified power.
+taken as EV stops, which is two to the specified power.
 .TP
 .BI \-calibrate \ L
 Adjust output levels such that a value of 1.0 corresponds to
-the given luminance in candelas/meter^2.
+the specified luminance
+.I L
+in candelas/meter^2.
 Any
 .I \-expose
 setting will be applied on top of the computed factor.
 If the input calibration is unknown, as in LDR or HDR
 formats that do not specify a sample-to-nits or exposure value,
-the given
-.I L
-argument will be set as the luminance corresponding to 1.0
-or its equivalent (e.g., 255 for a byte encoding).
+the specified value will be saved as the luminance 
+corresponding to 1.0 or its equivalent.
+(E.g., 255 is 1.0 for a byte encoding.)\0
 .TP
 .BI \-limit \ P
 Adjust the default exposure to allow the given percentage of
 pixels to exceed the 0-1 output range.
 (E.g., a
 .I P
-setting of 0 will ensure the brightest pixel is 1.0 in the output.)
+setting of 0 will ensure the brightest pixel is exactly
+1.0 in the output.)\0
 This option is incompatible with and overrides any previous
 .I \-calibrate
 setting.
-As with the
-.I \-calibrate
-option, the
+As with that option, the
 .I \-expose
 setting is applied after this initial adjustment.
 .TP
@@ -241,12 +230,14 @@ Anything less than 0.62 will apply Gaussian downsampling,
 which may involve some degree of resolution loss.
 The output dimensions
 will always be adjusted to produce "square" pixels, even
-if the input pixels are not, so the same scale factor
-may not be applied to both dimensions in such cases.
+if the input pixels are not.
+If input pixels are non-square, the specified scale factor
+will apply to the most squeezed dimension and the other
+dimension's will be compressed to make the pixels square.
 The default scale factor is 1.0, which means no resampling
 for pixels that are already square.
 Alternatively, the options below may be used to
-control the final image dimensions.
+control the final image dimensions more directly.
 .TP
 .BI \-dim " xdim ydim"
 Fit the output image into a frame that is at most
@@ -256,7 +247,7 @@ by
 pixels.
 The largest scale factor is selected such
 that neither of these dimensions is exceeded, while maintaining
-square pixels.
+square output pixels.
 .TP
 .BI \-xres \ xdim
 Adjust the scale factor such that the output X-dimension does
@@ -278,14 +269,19 @@ option.
 .TP
 .BI \-rotate \ {0|90|180|270}[hv]
 Rotate the image clockwise by the given number of degrees
-(multiples of 90, only).
+(multiples of 90 only).
 A 0 argument is usually but not always the same as no rotation,
-as it will reorient images that have non-standard starting ordering.
+as it will reorient input images with non-standard ordering,
+which would otherwise be passed as-is.
 If followed by an 'h' or 'v' character, the rotation will be
 followed by a horizontal or vertical flip.
 .TP
 .BI \-blur \ R
 Blur the image by the given decimal radius in output pixels.
+An
+.I R
+value below 0.4 will sharpen pixels, and a negative setting
+will perform crude edge detection.
 .TP
 .BI \-dilate \ R
 Dilate the image using the given decimal radius, which
@@ -326,7 +322,7 @@ Multiple comments may be given with multiple options.
 .BI \-parameter \ param
 A parameter is similar to a comment, but takes the form "variable=value",
 and any number of parameters may be given either in separate 
-options or using a colon (':') separator, e.g., "var1=val1:var2=val2".
+options or using a semicolon (';') separator, e.g., "var1=val1;var2=val2".
 Some parameters will affect the output, such as the "REFDEPTH" for
 setting the reference depth in a Radiance DPT output file.
 .SH EXAMPLES
@@ -343,7 +339,7 @@ hdrcvt -limit 2 -out sRGB input.hdr output.jpg
 To rotate an image by 90 degrees then flip horizontally and blur,
 writing at a quality/compression setting of 70:
 .IP "" .2i
-hdrcvt -rotate 90h -blur 1.5 -qual 70 input.jpg output.jpg
+hdrcvt -rotate 90h -blur 1.5 -out in -qual 70 input.jpg output.jpg
 .PP
 To downsample a square LDR image to raw gray short values:
 .IP "" .2i

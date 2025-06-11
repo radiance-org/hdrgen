@@ -31,8 +31,6 @@ const char	USE_MSG[] = "Usage: %s [-verbose][-dim X Y | -scale F]\
 extern bool	PHDremoveFlare(ImgStruct *ims,
 				int (*pbar)(const char *, int) = NULL);
 
-extern char* progname;
-
 #define MIN_GAMMA	1.6f		// minimum expected gamma
 #define DEF_GAMMA	(ICS_sRGB.gamma)
 
@@ -1233,7 +1231,7 @@ main(int argc, char * argv[])
 					&& strchr(argv[2], '=')) {
 			strcpy(paramp, argv[2]);
 			while (*paramp) {
-				if (*paramp == ':') *paramp = '\n';
+				if (*paramp == ';') *paramp = '\n';
 				++paramp;
 			}
 			if (paramp[-1] != '\n') *paramp++ = '\n';
