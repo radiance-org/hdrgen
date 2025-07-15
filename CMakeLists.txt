@@ -11,9 +11,14 @@ cmake_policy(SET CMP0077 NEW)
 # Build type
 set(CMAKE_BUILD_TYPE Release)
 
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+# Ensure all dependencies are built as static libraries
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build static libraries only")
 
-# ExternalProject_Add(panlib SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/panlib)
+# Force static build for panlib dependencies if available
+set(PANLIB_BUILD_SHARED OFF CACHE BOOL "Panlib static build")
+set(OPENEXR_BUILD_SHARED_LIBS OFF CACHE BOOL "OpenEXR static build")
+set(JPEG_TURBO_BUILD_SHARED OFF CACHE BOOL "libjpeg-turbo static build")
+
 add_subdirectory(external/panlib)
 
 set(PANLIB_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/panlib/src)
