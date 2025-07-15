@@ -51,8 +51,12 @@ main(int argc, char *argv[])
 	extrema[0] = 1; extrema[1] = 0;	/* get extrema */
 	if (!PcomputeHisto(extrema, NULL, 0, &ims, PHCluminance))
 		return 1;
+	if (minv <= 0) {
+		DMESG(DMCdata, "Some input gray levels are <= 0");
+		return 1;
+	}
 	if ((minv <= extrema[0]) & (extrema[1] <= maxv)) {
-		puts("1.0");		/* we're in range */
+		puts("1.");		/* we're in range */
 		return 0;
 	}
 	if (maxv/minv >= extrema[1]/extrema[0]) {
@@ -75,7 +79,7 @@ main(int argc, char *argv[])
 		else
 			lost[1] += histo[--hupper];
 
-	printf("%.1e\n", maxv/( extrema[0] * pow(extrema[1]/extrema[0],
+	printf("%.2e\n", maxv/( extrema[0] * pow(extrema[1]/extrema[0],
 							hupper*(1./HSIZE)) ));
 	return 0;
 }
